@@ -12,7 +12,7 @@ def list_transactions():
     product_id = request.args.get("product_id", type=int)
     supplier_id = request.args.get("supplier_id", type=int)
     if product_id is not None:
-        results = [t for t in results if t.supplier_id == product_id]
+        results = [t for t in results if t.product_id == product_id]
     if supplier_id is not None:
         results = [t for t in results if t.supplier_id == supplier_id]
     return jsonify([t.to_dict() for t in results])
@@ -22,6 +22,11 @@ def list_transactions():
 def create_transaction():
     data = request.get_json()
     product = store.products.get(data["product_id"])
+    supplier_id = data.get("supplier_id")
+    supplier = store.suppliers.get(supplier_id) if supplier_id is not None else None
+    supplier_name = ""
+    if supplier is not None:
+        supplier_name = supplier.name
     if product is None:
         return jsonify({"error": "Product not found"}), 404
 
@@ -40,9 +45,9 @@ def create_transaction():
     transaction = Transaction(
         id=transaction_id,
         product_id=data.get("product_id"),
-        product_name=data.get("product_name"),
+        product_name=product.name,
         supplier_id=data.get("supplier_id"),
-        supplier_name=data.get("supplier_name"),
+        supplier_name=supplier_name,
         type=tx_type,
         quantity=quantity,
     )
