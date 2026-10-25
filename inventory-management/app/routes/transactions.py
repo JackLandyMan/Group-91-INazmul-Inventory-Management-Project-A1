@@ -37,6 +37,8 @@ def create_transaction():
     if tx_type == "IN":
         product.quantity_on_hand += quantity
     elif tx_type == "OUT":
+        if (quantity > product.quantity_on_hand):
+            return jsonify({"error": "cannot remove into negative values"}), 400
         product.quantity_on_hand -= quantity
     else:
         return jsonify({"error": "type must be IN or OUT"}), 400

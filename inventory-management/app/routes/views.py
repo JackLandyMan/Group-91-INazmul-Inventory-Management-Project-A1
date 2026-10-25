@@ -65,29 +65,44 @@ def transactions_page():
         if supplier_id:
             supplier_id = int(supplier_id)
 
+        supplierIsWrong = False
+        quantityIsWrong = False
         product = store.products.get(product_id)
         if product is not None:
             product_name = product.name
             if tx_type == "IN":
                 product.quantity_on_hand += quantity
             elif tx_type == "OUT":
-                product.quantity_on_hand -= quantity
-
-            supplier = store.suppliers.get(supplier_id)
-            supplier_name = ""
-            if supplier is not None:
-                supplier_name = supplier.name
-
-            transaction_id = store.next_id("transaction")
-            transaction = Transaction(
-                id=transaction_id,
-                product_id=product_id,
-                product_name=product_name,
-                supplier_id=supplier_id,
-                supplier_name=supplier_name,
-                type=tx_type,
-                quantity=quantity,
-            )
-            store.transactions[transaction_id] = transaction
+                if (quantity <= product.quantity_on_hand): 
+                    product.quantity_on_hand -= quantity
+                else:
+                    quantityIsWrong = True
+            if (not quantityIsWrong):
+                supplier_name = ""
+                if supplier_id is not None:
+                    supplier = store.suppliers.get(supplier_id)
+                    if supplier is None or supplier.name is None:
+                        supplierIsWrong = True
+                    else:
+                        supplier_name = supplier.name
+                        
+                if (not supplierIsWrong):
+                    transaction_id = store.next_id("transaction")
+                    transaction = Transaction(
+                        id=transaction_id,
+                        product_id=product_id,
+                        product_name=product_name,
+                        supplier_id=supplier_id,
+                        supplier_name=supplier_name,
+                        type=tx_type,
+                        quantity=quantity,
+                    )
+                    store.transactions[transaction_id] = transaction
+                else:
+                    return render_template("transactions.html", transactions=store.transactions.values(), error="Invalid Supplier ID!")
+            else:
+                return render_template("transactions.html", transactions=store.transactions.values(), error="Not enough stock available!")
+        else:
+            return render_template("transactions.html", transactions=store.transactions.values(), error="Invalid Product ID!")
         return redirect(url_for("views.transactions_page"))
     return render_template("transactions.html", transactions=store.transactions.values())
