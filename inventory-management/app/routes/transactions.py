@@ -28,6 +28,7 @@ def create_transaction():
     quantity = data["quantity"]
     tx_type = data["type"]
 
+    #this looks important for fixing quantity stuff
     if tx_type == "IN":
         product.quantity_on_hand += quantity
     elif tx_type == "OUT":
@@ -38,8 +39,10 @@ def create_transaction():
     transaction_id = store.next_id("transaction")
     transaction = Transaction(
         id=transaction_id,
-        product_id=data["product_id"],
+        product_id=data.get("product_id"),
+        product_name=data.get("product_name"),
         supplier_id=data.get("supplier_id"),
+        supplier_name=data.get("supplier_name"),
         type=tx_type,
         quantity=quantity,
     )
