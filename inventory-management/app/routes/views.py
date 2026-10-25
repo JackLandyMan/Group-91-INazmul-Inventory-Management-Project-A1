@@ -67,7 +67,6 @@ def transactions_page():
 
         product = store.products.get(product_id)
         if product is not None:
-            product_name = product.name
             if tx_type == "IN":
                 product.quantity_on_hand += quantity
             elif tx_type == "OUT":
@@ -77,7 +76,6 @@ def transactions_page():
             transaction = Transaction(
                 id=transaction_id,
                 product_id=product_id,
-                product_name=product_name,
                 supplier_id=supplier_id,
                 type=tx_type,
                 quantity=quantity,
