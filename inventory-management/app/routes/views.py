@@ -73,12 +73,18 @@ def transactions_page():
             elif tx_type == "OUT":
                 product.quantity_on_hand -= quantity
 
+            supplier = store.suppliers.get(supplier_id)
+            supplier_name = ""
+            if supplier is not None:
+                supplier_name = supplier.name
+
             transaction_id = store.next_id("transaction")
             transaction = Transaction(
                 id=transaction_id,
                 product_id=product_id,
                 product_name=product_name,
                 supplier_id=supplier_id,
+                supplier_name=supplier_name,
                 type=tx_type,
                 quantity=quantity,
             )
