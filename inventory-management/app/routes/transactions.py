@@ -22,13 +22,18 @@ def list_transactions():
 def create_transaction():
     data = request.get_json()
     product = store.products.get(data["product_id"])
+
+    # Check product ID first
+    if product is None:
+        return jsonify({"error": "Product not found"}), 404
+
     supplier_id = data.get("supplier_id")
     supplier = store.suppliers.get(supplier_id) if supplier_id is not None else None
     supplier_name = ""
-    if supplier is not None:
+    if supplier_id is not None:
+        if supplier is None:
+            return jsonify({"error": "Supplier not found"}), 404
         supplier_name = supplier.name
-    if product is None:
-        return jsonify({"error": "Product not found"}), 404
 
     quantity = data["quantity"]
     tx_type = data["type"]
