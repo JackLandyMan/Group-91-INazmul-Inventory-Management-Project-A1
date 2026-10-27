@@ -7,6 +7,7 @@
 #200 OK: Data fetched successfully.
 #201 Created: New resource successfully built.
 #204 No Content: Action succeeded, returning no body.
+#404 Not found
 
 
 
@@ -19,7 +20,7 @@ def test_list_suppliers(client):
     assert response.status_code == 200
     assert response.get_json() == []
 
-    #test with one supplier
+#test with one supplier
     response = client.post(
         "/suppliers",
         json={
@@ -30,10 +31,10 @@ def test_list_suppliers(client):
 
     )
 
-    data = response.get_json()
     #did it create the data
     assert response.status_code == 201
 
+    #Now get the Data for the test
     response = client.get("/suppliers")
     data = response.get_json()
     #did it get the data
@@ -228,20 +229,129 @@ def delete_supplier(client):
     assert data["error"] == "Supplier not found"
 
 def test_outgoing_transactions(client):
-    #make a product
+    #make a product (good data)
     response = client.post(
         "/products",
         json={
             "name": "OldCheese",
             "sku": "01test",
-            "unit_price":0.00,
-            "quantity_on_hand": 6,
+            "unit_price":1.00,
+            "quantity_on_hand": 2,
 
         }
     )
+        
+    assert response.status_code == 201
 
+    #make a supplier (good data)
+    response = client.post(
+            "/suppliers",
+            json={
+                "name": "Dell",
+                "contact_email": "sales@dell.com"
+            }
+    
+    
+        )
 
     assert response.status_code == 201
 
-    #Test a normal removal of a product
+    #Test a normal out transaction of a product
+    response = client.post(
+            "/transactions",
+            json={
+                "product_id": 1,
+                "type": "OUT",
+                "quantity": 1,
+                "supplier_id": 1
+            }
+        )
+    #Catch the custom message
+    assert response.status == "201 CREATED"
 
+    #check the data - did it remove the quantity ?
+    data = response.get_json()
+    assert data["product_id"] == 1
+    assert data["type"] == "OUT"
+    assert data["quantity"] == 1
+    assert data["supplier_id"] == 1
+    
+    
+    #check product not found higher
+    
+    response = client.post(
+            "/transactions",
+            json={
+                "product_id": 2,
+                "type": "OUT",
+                "quantity": 1,
+                "supplier_id": 1
+            }
+        )
+
+    
+    assert response.status == "404 NOT FOUND"
+    #check product not there lower
+    response = client.post(
+            "/transactions",
+            json={
+                "product_id": 0,
+                "type": "OUT",
+                "quantity": 1,
+                "supplier_id": 1
+            }
+        )
+    assert response.status == "404 NOT FOUND"
+    #check for bad type
+    response = client.post(
+                "/transactions",
+                json={
+                    "product_id": 1,
+                    "type": "DOGS",
+                    "quantity": 1,
+                    "supplier_id": 1
+                }
+            )
+    assert response.status == "400 BAD REQUEST"
+    
+    #testing a negative quantity
+    response = client.post(
+                "/transactions",
+                json={
+                    "product_id": 1,
+                    "type": "Out",
+                    "quantity": -11,
+                    "supplier_id": 1
+                }
+            )
+    assert response.status == "400 BAD REQUEST"
+    #check a bad supplier, lower
+    response = client.post(
+                "/transactions",
+                json={
+                    "product_id": 1,
+                    "type": "Out",
+                    "quantity": 1,
+                    "supplier_id": -1
+                }
+            )
+    assert response.status == "400 BAD REQUEST"
+
+    #check for a bad supplier id, higher
+    response = client.post(
+                "/transactions",
+                json={
+                    "product_id": 1,
+                    "type": "Out",
+                    "quantity": 1,
+                    "supplier_id": 2
+                }
+            )
+    assert response.status == "400 BAD REQUEST"
+
+
+
+
+
+    
+    
