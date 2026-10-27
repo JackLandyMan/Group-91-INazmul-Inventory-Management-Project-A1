@@ -32,8 +32,11 @@ def create_transaction():
         product.quantity_on_hand += quantity
     elif tx_type == "OUT":
         product.quantity_on_hand -= quantity
+    #Added Sale option
+    elif tx_type == "SALE":
+        product.quantity_on_hand -= quantity
     else:
-        return jsonify({"error": "type must be IN or OUT"}), 400
+        return jsonify({"error": "type must be IN, SALE or OUT"}), 400
 
     transaction_id = store.next_id("transaction")
     transaction = Transaction(
