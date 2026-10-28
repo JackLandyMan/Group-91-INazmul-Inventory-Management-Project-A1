@@ -22,6 +22,6 @@ def test_product_id_incorrect(client):
         "quantity": 10,
     }
 
-    #Confirm if successful
+    #Confirm transaction failed
     transaction_response = client.post("/transactions", json=transaction_dummy)
     assert transaction_response.status_code == 404
