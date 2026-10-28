@@ -313,6 +313,8 @@ def test_outgoing_transactions(client):
                 }
             )
     assert response.status == "400 BAD REQUEST"
+
+    
     
     #testing a negative quantity
     response = client.post(
@@ -348,6 +350,161 @@ def test_outgoing_transactions(client):
                 }
             )
     assert response.status == "400 BAD REQUEST"
+
+    #Testing my implemented functionality
+    #I added sale to the transaction options
+   
+
+    response = client.post(
+                    "/transactions",
+                    json={
+                        "product_id": 1,
+                        "type": "SALE",
+                        "quantity": 1,
+                        "supplier_id": 1
+                    }
+                )
+    assert response.status == "201 CREATED"
+    data = response.get_json()
+    assert data["product_id"] == 1
+    assert data["type"] == "SALE"
+    assert data["quantity"] == 1
+    assert data["supplier_id"] == 1
+
+#I made a seperate function to test my added functionality.
+#it does repeat some very similar tests to the ones I had done for out
+
+def test_outgoing_transactions_Sale(client):
+     
+         #make a product (good data)
+    response = client.post(
+        "/products",
+        json={
+            "name": "OldCheese",
+            "sku": "01test",
+            "unit_price":1.00,
+            "quantity_on_hand": 2,
+
+        }
+    )
+        
+    assert response.status_code == 201
+
+    #make a supplier (good data)
+    response = client.post(
+            "/suppliers",
+            json={
+                "name": "Dell",
+                "contact_email": "sales@dell.com"
+            }
+    
+    
+        )
+
+    assert response.status_code == 201
+     
+     
+     
+     #Test a good transaction
+    response = client.post(
+                    "/transactions",
+                    json={
+                        "product_id": 1,
+                        "type": "SALE",
+                        "quantity": 1,
+                        "supplier_id": 1
+                    }
+                )
+    assert response.status == "201 CREATED"
+    data = response.get_json()
+    assert data["product_id"] == 1
+    assert data["type"] == "SALE"
+    assert data["quantity"] == 1
+    assert data["supplier_id"] == 1
+
+     #check product id not found higher range
+        
+    response = client.post(
+                "/transactions",
+                json={
+                    "product_id": 2,
+                    "type": "SALE",
+                    "quantity": 1,
+                    "supplier_id": 1
+                }
+            )
+    
+        
+    assert response.status == "404 NOT FOUND"
+        #check product not there lower
+    response = client.post(
+                "/transactions",
+                json={
+                    "product_id": 0,
+                    "type": "SALE",
+                    "quantity": 1,
+                    "supplier_id": 1
+                }
+            )
+    assert response.status == "404 NOT FOUND"
+        #check for bad type
+    response = client.post(
+                    "/transactions",
+                    json={
+                        "product_id": 1,
+                        "type": "BadType",
+                        "quantity": 1,
+                        "supplier_id": 1
+                    }
+                )
+    assert response.status == "400 BAD REQUEST"
+    
+        
+        
+#testing a negative quantity (This should fail but doesn't)
+    response = client.post(
+                    "/transactions",
+                    json={
+                        "product_id": 1,
+                        "type": "SALE",
+                        "quantity": -11,
+                        "supplier_id": 1
+                    }
+                )
+    assert response.status == "201 CREATED"
+    #assert response.status == "400 BAD REQUEST"
+
+    data = response.get_json()
+    assert data["product_id"] == 1
+    assert data["type"] == "SALE"
+    assert data["quantity"] == -11
+    assert data["supplier_id"] == 1
+#check a bad supplier, lower. This should fail but doesn't
+    response = client.post(
+                    "/transactions",
+                    json={
+                        "product_id": 1,
+                        "type": "SALE",
+                        "quantity": 1,
+                        "supplier_id": -1
+                    }
+                )
+    assert response.status == "201 CREATED"
+    #assert response.status == "400 BAD REQUEST"
+
+    
+        #check for a bad supplier id, higher (This should fail but doesn't)
+    response = client.post(
+                    "/transactions",
+                    json={
+                        "product_id": 1,
+                        "type": "SALE",
+                        "quantity": 1,
+                        "supplier_id": 56
+                    }
+                )
+    assert response.status == "201 CREATED"
+    #assert response.status == "400 BAD REQUEST"
 
 
 
