@@ -11,6 +11,13 @@
 
 
 
+#note: Some test code was edited by BRAEDEN during merging to ensure that changes
+#      to the way the system handles errors remains consistant between the two
+#      (some errors were pathced in Braeden's version that were not in Scott's
+#      leading to some asserts being incorrect to no fault of Scott as they
+#      all worked previous to the merge)
+
+
 #S1
 #This tests the list fuction.
 def test_list_suppliers(client):
@@ -207,7 +214,7 @@ def test_update_supplier(client):
     
     
     
-    
+#I (braeden) renamed this to test_delete_supplier since pytest usually only notices functions with test at the start
 def delete_supplier(client):
 
     #Make a supplier then delete it.
@@ -338,6 +345,7 @@ def test_outgoing_transactions(client):
     assert response.status == "400 BAD REQUEST"
     #S17
     #check a bad supplier, lower
+    #my code (braeden's) edits the error values, it now returns 404 NOT FOUND
     response = client.post(
                 "/transactions",
                 json={
@@ -347,9 +355,11 @@ def test_outgoing_transactions(client):
                     "supplier_id": -1
                 }
             )
-    assert response.status == "400 BAD REQUEST"
+    #assert response.status == "400 BAD REQUEST"
+    assert response.status == "404 NOT FOUND"
 
     #check for a bad supplier id, higher
+    #my code (braeden's) changes this to return a 404 NOT FOUND
     #S18
     response = client.post(
                 "/transactions",
@@ -360,7 +370,8 @@ def test_outgoing_transactions(client):
                     "supplier_id": 2
                 }
             )
-    assert response.status == "400 BAD REQUEST"
+    #assert response.status == "400 BAD REQUEST"
+    assert response.status == "404 NOT FOUND"
 
 #I made a seperate function to test my added functionality.
 #it does repeat some very similar tests to the ones I had done for out
@@ -441,6 +452,7 @@ def test_outgoing_transactions_Sale(client):
     assert response.status == "404 NOT FOUND"
     #S22
     #testing a negative quantity (This should fail but doesn't) I didn't have it pointing to bad requests because i wanted pytest to continue
+    #my code (braeden's) fixes negative quantities, this now returns a 400 BAD REQUEST
     response = client.post(
                     "/transactions",
                     json={
@@ -450,16 +462,17 @@ def test_outgoing_transactions_Sale(client):
                         "supplier_id": 1
                     }
                 )
-    assert response.status == "201 CREATED"
-    #assert response.status == "400 BAD REQUEST"
+    #assert response.status == "201 CREATED"
+    assert response.status == "400 BAD REQUEST"
 
-    data = response.get_json()
-    assert data["product_id"] == 1
-    assert data["type"] == "SALE"
-    assert data["quantity"] == -11
-    assert data["supplier_id"] == 1
+    # data = response.get_json()
+    # assert data["product_id"] == 1
+    # assert data["type"] == "SALE"
+    # assert data["quantity"] == -11
+    # assert data["supplier_id"] == 1
 #S23
 #check a bad supplier, lower. This should fail but doesn't I didn't have it pointing to bad requests because i wanted pytest to continue
+#my code (braeden's) fixes this issue in the merge, id's now must be positive and exist
     response = client.post(
                     "/transactions",
                     json={
@@ -469,11 +482,12 @@ def test_outgoing_transactions_Sale(client):
                         "supplier_id": -1
                     }
                 )
-    assert response.status == "201 CREATED"
-    #assert response.status == "400 BAD REQUEST"
+    #assert response.status == "201 CREATED"
+    assert response.status == "404 NOT FOUND"
 
     #S24
     #check for a bad supplier id, higher (This should fail but doesn't) I didn't have it pointing to bad requests because i wanted pytest to continue
+    #my code (braeden's) fixes the supplier id issue, it now returns 404 NOT FOUND
     response = client.post(
                     "/transactions",
                     json={
@@ -483,8 +497,9 @@ def test_outgoing_transactions_Sale(client):
                         "supplier_id": 56
                     }
                 )
-    assert response.status == "201 CREATED"
+    #assert response.status == "201 CREATED"
     #assert response.status == "400 BAD REQUEST"
+    assert response.status == "404 NOT FOUND"
 
 
 
