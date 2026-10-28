@@ -24,6 +24,10 @@ def low_stock():
 @products_bp.route("", methods=["POST"])
 def create_product():
     data = request.get_json()
+
+    if not data or not data.get("name") or not data.get("sku") or data.get("quantity_on_hand") < 0 or data.get("unit_price") < 0:
+        return jsonify({"error": "Product name and sku is required"}), 400
+
     product_id = store.next_id("product")
     product = Product(
         id=product_id,
