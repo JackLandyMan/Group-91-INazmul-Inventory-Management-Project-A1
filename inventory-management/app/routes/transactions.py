@@ -37,16 +37,22 @@ def create_transaction():
 
     quantity = data["quantity"]
     tx_type = data["type"]
-
+    if (quantity < 0):
+        return jsonify({"error": "Quantity cannot be negative"}), 400
     #this looks important for fixing quantity stuff
     if tx_type == "IN":
+        if (quantity > product.quantity_on_hand or quantity < 0):
+            return jsonify({"error": "bad value request"}), 400
         product.quantity_on_hand += quantity
     elif tx_type == "OUT":
-        if (quantity > product.quantity_on_hand):
-            return jsonify({"error": "cannot remove into negative values"}), 400
+        if (quantity > product.quantity_on_hand or quantity < 0):
+            return jsonify({"error": "bad value request"}), 400
+        product.quantity_on_hand -= quantity
+    #Added Sale option
+    elif tx_type == "SALE":
         product.quantity_on_hand -= quantity
     else:
-        return jsonify({"error": "type must be IN or OUT"}), 400
+        return jsonify({"error": "type must be IN, SALE or OUT"}), 400
 
     transaction_id = store.next_id("transaction")
     transaction = Transaction(
