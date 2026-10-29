@@ -101,6 +101,7 @@ def test_negative_stock_addition(client):
         "type": "IN",
         "quantity": -1
     }
+    
 
     transaction_response = client.post("/transactions", json=transaction_dummy)
     assert transaction_response.status_code == 400
