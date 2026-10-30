@@ -5,7 +5,7 @@ def test_transaction_contains_supplier_name(client):
     transaction
     """
     
-    #Create the dummy product
+    # Create the dummy product
     product_dummy = {
         "name": "Dummy",
         "sku": "DUM-001",
@@ -13,21 +13,24 @@ def test_transaction_contains_supplier_name(client):
         "quantity_on_hand": 100,
     }
 
+    # Ensure the product was created
     response = client.post("/products", json=product_dummy)
     assert response.status_code == 201
+
     product_id = response.get_json()["id"]
 
-    #Create the dummy supplier
+    # Create the dummy supplier
     supplier_dummy = {
         "name": "Supplier",
         "contact_email": "sup@gmail.ca",
     }
 
+    # Ensure the supplier was created
     response = client.post("/suppliers", json=supplier_dummy)
     assert response.status_code == 201
-    supplier_id = response.get_json()["id"]
 
-    #Create the dummy transaction for the dummy supplier
+    supplier_id = response.get_json()["id"]
+    # Create the dummy transaction for the dummy supplier
     transaction_dummy = {
         "product_id": product_id,
         "type": "IN",
@@ -35,10 +38,10 @@ def test_transaction_contains_supplier_name(client):
         "supplier_id": supplier_id
     }
 
+    # Ensure the transaction was created
     transaction_response = client.post("/transactions", json=transaction_dummy)
-
     assert transaction_response.status_code == 201
+    
+    #Confirm if successful 
     transaction = transaction_response.get_json()
-
-    #Confirm if successful
     assert transaction["supplier_name"] == "Supplier"

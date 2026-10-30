@@ -4,7 +4,7 @@ def test_product_id_incorrect(client):
     do not exist are not entered into the system
     """
     
-    #Create the dummy product
+    # Create the dummy product
     product_dummy = {
         "name": "Dummy",
         "sku": "DUM-001",
@@ -12,16 +12,17 @@ def test_product_id_incorrect(client):
         "quantity_on_hand": 100,
     }
 
+    # Ensure the product was created
     product_response = client.post("/products", json=product_dummy)
     assert product_response.status_code == 201
 
-    #Create the dummy transaction for the dummy product
+    # Create the dummy transaction
     transaction_dummy = {
         "product_id": 999,
         "type": "OUT",
         "quantity": 10,
     }
 
-    #Confirm transaction failed
+    # Confirm transaction failed
     transaction_response = client.post("/transactions", json=transaction_dummy)
     assert transaction_response.status_code == 404
