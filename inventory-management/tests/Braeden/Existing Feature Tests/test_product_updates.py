@@ -40,7 +40,6 @@ def test_product_exists_updater(client):
     assert product["unit_price"] == 0.00
     assert product["quantity_on_hand"] == 1
 
-
 def test_product_no_exist_updater(client):
     """Ensure a product that does not be 
     exist cannot be updated with new information
