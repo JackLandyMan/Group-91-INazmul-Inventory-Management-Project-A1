@@ -2,7 +2,8 @@ def test_empty_product_list(client):
     """Checks an empty product list returns the correct code
     when empty
     """
-    
+
+    # Ensure an empty list exists
     product_response = client.get("/products")
     assert product_response.status_code == 200
     assert product_response.get_json() == []
@@ -20,10 +21,11 @@ def test_single_product_list(client):
         "quantity_on_hand": 100,
     }
 
+    # Ensure hte product was created
     product_response = client.post("/products", json=product_dummy)
     assert product_response.status_code == 201
 
-    # Get the product list
+    # Ensure the list exists
     list_response = client.get("/products")
     assert list_response.status_code == 200
 
@@ -47,6 +49,7 @@ def test_double_product_list(client):
         "quantity_on_hand": 100,
     }
 
+    # Ensure the procut exists
     product_response = client.post("/products", json=product_dummy)
     assert product_response.status_code == 201
 
@@ -58,6 +61,7 @@ def test_double_product_list(client):
         "quantity_on_hand": 1,
     }
 
+    # Ensure the second product exists
     product_response = client.post("/products", json=product_dummy2)
     assert product_response.status_code == 201
 
@@ -65,7 +69,7 @@ def test_double_product_list(client):
     list_response = client.get("/products")
     assert list_response.status_code == 200
 
-    # Check that the list contains one product
+    # Check that the list contains two products
     products = list_response.get_json()
     assert len(products) == 2
     assert products[0]["name"] == "Dummy"
