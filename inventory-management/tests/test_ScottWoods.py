@@ -215,7 +215,7 @@ def test_update_supplier(client):
     
     
 #I (braeden) renamed this to test_delete_supplier since pytest usually only notices functions with test at the start
-def delete_supplier(client):
+def test_delete_supplier(client):
 
     #Make a supplier then delete it.
     response = client.post(
