@@ -1,6 +1,6 @@
 from flask import Blueprint, jsonify, request
-
 from app import store
+from notification_service import send_notification
 from app.models.transaction import Transaction
 
 transactions_bp = Blueprint("transactions", __name__, url_prefix="/transactions")
@@ -54,6 +54,12 @@ def create_transaction():
     else:
         return jsonify({"error": "type must be IN, SALE or OUT"}), 400
 
+    notification_sent = False
+    if tx_type in ("OUT", "SALE") and product.quantity_on_hand <= 5:
+        subject = "Low Stock Alert!"
+        message = f"Hello {supplier.name}, \n{product['name']} has {product['quantity_on_hand']} units remaining. \nPlease arrange to restock this product."
+        notification_sent = send_notification("supplier.contact_email", subject, message)
+
     transaction_id = store.next_id("transaction")
     transaction = Transaction(
         id=transaction_id,
@@ -65,4 +71,11 @@ def create_transaction():
         quantity=quantity,
     )
     store.transactions[transaction_id] = transaction
-    return jsonify(transaction.to_dict()), 201
+
+    response = transaction.to_dict()
+    response["notification_sent"] = notification_sent
+    response["notification_message"] = notification_message
+
+    return jsonify(response), 201
+
+
