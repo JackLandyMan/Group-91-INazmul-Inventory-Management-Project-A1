@@ -50,15 +50,17 @@ def create_transaction():
         product.quantity_on_hand -= quantity
     #Added Sale option
     elif tx_type == "SALE":
+        if quantity > product.quantity_on_hand:
+            return jsonify({"error": "bad value request"}), 400
         product.quantity_on_hand -= quantity
     else:
         return jsonify({"error": "type must be IN, SALE or OUT"}), 400
 
     notification_sent = False
-    if tx_type in ("OUT", "SALE") and product.quantity_on_hand <= 5:
+    if tx_type in ("OUT", "SALE") and product.quantity_on_hand < 5:
         subject = "Low Stock Alert!"
-        message = f"Hello {supplier.name}, \n{product['name']} has {product['quantity_on_hand']} units remaining. \nPlease arrange to restock this product."
-        notification_sent = send_notification("supplier.contact_email", subject, message)
+        message = f"Hello {supplier.name}, \n{product.name} has {product.quantity_on_hand} units remaining. \nPlease arrange to restock this product."
+        notification_sent = send_notification(supplier.contact_email, subject, message)
 
     transaction_id = store.next_id("transaction")
     transaction = Transaction(
