@@ -74,7 +74,6 @@ def create_transaction():
 
     response = transaction.to_dict()
     response["notification_sent"] = notification_sent
-    response["notification_message"] = notification_message
 
     return jsonify(response), 201
 
