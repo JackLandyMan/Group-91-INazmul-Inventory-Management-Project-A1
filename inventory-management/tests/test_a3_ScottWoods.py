@@ -1,5 +1,7 @@
 from unittest.mock import patch
 from app import store
+from app.models.purchase_order import PurchaseOrder
+from datetime import date
 #Assignment 3 tests Scott Woods
 
 #testing the failures of the notification system
@@ -40,7 +42,7 @@ def test_notification_failure(monkeypatch, client):
         assert transaction_response.status_code == 201
         #did notification fail? Yes
         assert transaction_response.get_json()["notification_sent"] == False
-        #did it get called Yes
+        #did it get called? No
         mock_send.assert_not_called
         #did it take away the product? Yes
         product_id = product_response.json["id"]
@@ -72,7 +74,8 @@ def test_notification_failure(monkeypatch, client):
         assert store.products[product_id].quantity_on_hand == 1
 
 
-        #these are filling up the coverage
+        #these are filling up the coverage for the transaction file now. 
+        #These are unrelated to the notification testing
         #sale more then on hand
         transactionTwo= {
             "product_id": 1,
@@ -149,7 +152,7 @@ def test_list_transactions(client):
         }
 
     transaction_response = client.post("/transactions", json=transactionOne)
-        #Test the notification
+    
         #does the transaction complete? Yes
     assert transaction_response.status_code == 201
 
@@ -199,14 +202,19 @@ def test_get_supplier(client):
 
 
 
+#lets test a supplier
 def test_update_supplier(client):
+    #lets update a suppler that doesn't exist
     supplier_id = None
+   
+   
     response = client.put(
         f"/suppliers/{supplier_id}",
         json={
             "name": "Updated Name"
         }
     )
+    #did it fail?
     assert response.status_code == 404
 
 
@@ -257,6 +265,90 @@ def test_supplier_products(client):
     assert len(data) == 1
     assert data[0]["id"] == 1
 
+
+def test_purchase_order_defaults():
+   #Make the purchase order
+    po = PurchaseOrder(
+        id=1,
+        supplier_id=10,
+        product_id=20,
+        quantity_ordered=100
+    )
+
+    #Test the purchase order
+    assert po.id == 1
+    assert po.supplier_id == 10
+    assert po.product_id == 20
+    assert po.quantity_ordered == 100
+    assert po.status == "pending"
+    assert po.created_date == date.today()
+    assert po.received_date is None
+
+
+
+
+
+#suppliers_page_testing
+#lets get to that 90
+def test_suppliers_page_post(client):
+    response = client.post(
+        "/ui/suppliers",
+        data={
+            "name": "Dell",
+            "contact_email": "dell@dell.com"
+        }
+    )
+
+    assert response.status_code == 302
+    assert len(store.suppliers) == 1
+
+    supplier = next(iter(store.suppliers.values()))
+
+    assert supplier.name == "Dell"
+#delete_supplier_page
+
+    response = client.post("/ui/suppliers/1/delete")
+
+    #Is the supplier deleted
+    assert response.status_code == 302
+
+    assert 1 not in store.suppliers
+
+#transactions_page
+def test_transaction_increases_stock(client):
+    #make some test data
     
+    product = {
+            "name": "test",
+            "sku": "test1",
+            "unit_price": 1.00,
+            "quantity_on_hand": 10,
+        }
+    #check it was created
+    product_response = client.post("/products", json=product)
+    assert product_response.status_code == 201
+    
+    # Create a test supplier
+    supplier = {
+            "name": "fakeSupplier",
+            "contact_email": "test@test.com",
+        }
+    #check it was created 
+    supplier_response = client.post("/suppliers", json=supplier)
+    assert supplier_response.status_code == 201
+
+    #make an out transaction
+    client.post(
+        "/ui/transactions",
+        data={
+            "product_id": "1",
+            "type": "OUT",
+            "quantity": "5"
+        }
+    )
+
+    #Make sure the Data is still good
+    assert store.products[1].quantity_on_hand == 5
+    assert len(store.transactions) == 1
 
 
