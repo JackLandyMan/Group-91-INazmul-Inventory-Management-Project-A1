@@ -488,7 +488,7 @@ def test_delete_products_page(client):
 
 def test_delete_products_page_false(client):
     response = client.post("/ui/products/9999/delete")
-
+    
     #Ensure redirect
     assert response.status_code == 302
     assert response.headers["Location"].endswith("/ui/products")
