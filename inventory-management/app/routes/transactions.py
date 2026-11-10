@@ -1,6 +1,6 @@
 from flask import Blueprint, jsonify, request
-
 from app import store
+from notification_service import send_notification
 from app.models.transaction import Transaction
 
 transactions_bp = Blueprint("transactions", __name__, url_prefix="/transactions")
@@ -41,7 +41,7 @@ def create_transaction():
         return jsonify({"error": "Quantity cannot be negative"}), 400
     #this looks important for fixing quantity stuff
     if tx_type == "IN":
-        if (quantity > product.quantity_on_hand or quantity < 0):
+        if (quantity < 0):
             return jsonify({"error": "bad value request"}), 400
         product.quantity_on_hand += quantity
     elif tx_type == "OUT":
@@ -50,9 +50,17 @@ def create_transaction():
         product.quantity_on_hand -= quantity
     #Added Sale option
     elif tx_type == "SALE":
+        if quantity > product.quantity_on_hand:
+            return jsonify({"error": "bad value request"}), 400
         product.quantity_on_hand -= quantity
     else:
         return jsonify({"error": "type must be IN, SALE or OUT"}), 400
+
+    notification_sent = False
+    if tx_type in ("OUT", "SALE") and product.quantity_on_hand < 5:
+        subject = "Low Stock Alert!"
+        message = f"Hello {supplier.name}, \n{product.name} has {product.quantity_on_hand} units remaining. \nPlease arrange to restock this product."
+        notification_sent = send_notification(supplier.contact_email, subject, message)
 
     transaction_id = store.next_id("transaction")
     transaction = Transaction(
@@ -65,4 +73,10 @@ def create_transaction():
         quantity=quantity,
     )
     store.transactions[transaction_id] = transaction
-    return jsonify(transaction.to_dict()), 201
+
+    response = transaction.to_dict()
+    response["notification_sent"] = notification_sent
+
+    return jsonify(response), 201
+
+
