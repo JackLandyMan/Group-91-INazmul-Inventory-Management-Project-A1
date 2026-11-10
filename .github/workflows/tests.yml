@@ -1,1 +1,40 @@
+yaml
+name: Run Pytest on Inventory Tests
 
+# Trigger the workflow on every push and pull request targeting any branch,
+# but restrict it to only fire when files within the 'inventory/test' folder change.
+on:
+  push:
+    paths:
+      - 'inventory/test/**'
+  pull_request:
+    paths:
+      - 'inventory/test/**'
+
+jobs:
+  pytest:
+    name: Run Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Clone the repository onto the runner
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      # Step 2: Set up Python environment
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11' # Change to match your local Python version
+          cache: 'pip'          # Optional: Speeds up subsequent runs by caching dependencies
+
+      # Step 3: Install pytest and your project dependencies
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pytest
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
+      # Step 4: Run pytest targeting the specific folder
+      - name: Run Pytest
+        run: python -m pytest inventory/test/
