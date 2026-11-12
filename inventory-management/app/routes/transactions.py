@@ -41,7 +41,7 @@ def create_transaction():
         return jsonify({"error": "Quantity cannot be negative"}), 400
     #this looks important for fixing quantity stuff
     if tx_type == "IN":
-        if (quantity > product.quantity_on_hand or quantity < 0):
+        if (quantity < 0):
             return jsonify({"error": "bad value request"}), 400
         product.quantity_on_hand += quantity
     elif tx_type == "OUT":

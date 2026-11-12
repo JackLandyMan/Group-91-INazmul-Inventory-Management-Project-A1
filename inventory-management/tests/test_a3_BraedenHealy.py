@@ -3,7 +3,6 @@ from app import store
 
 
 #Notification system testing
-
 @patch("app.routes.transactions.send_notification", return_value=True)
 def test_notification_success(mock_send, client):
     """Ensures a notification is successfully sent exactly
@@ -153,3 +152,343 @@ def test_transaction_completes_with_notification(mock_send, client):
 
     # Ensure the notification was sent exactly once
     mock_send.assert_called_once()
+
+#Purchase order testing
+def test_create_product(client):
+    product_dummy = {
+        "name": "Dummy",
+        "sku": "DUM-001",
+        "unit_price": 10.00,
+        "quantity_on_hand": 5,
+    }
+    response = client.post("/products", json=product_dummy)
+
+    #Ensure its created
+    assert response.status_code == 201
+    # return response.json["id"]
+
+def test_create_supplier(client):
+    supplier_dummy = {
+        "name": "Dummy",
+        "contact_email": "dum@dum.ca",
+    }
+    response = client.post("/suppliers", json=supplier_dummy)
+
+    #Ensure its created
+    assert response.status_code == 201
+    # return response.json["id"]
+
+
+def test_create_purchase_order(client):
+    product_dummy = {
+        "name": "Dummy",
+        "sku": "DUM-001",
+        "unit_price": 10.00,
+        "quantity_on_hand": 5,
+    }
+    product_response = client.post("/products", json=product_dummy)
+
+    #Ensure the product is created
+    assert product_response.status_code == 201
+
+    supplier_dummy = {
+        "name": "Dummy",
+        "contact_email": "dum@dum.ca",
+    }
+    supplier_response = client.post("/suppliers", json=supplier_dummy)
+
+    #Ensure the supplier is created
+    assert supplier_response.status_code == 201
+
+    response = client.post("/purchase-orders", json={
+        "product_id": product_response.get_json()["id"],
+        "supplier_id": supplier_response.get_json()["id"],
+        "quantity_ordered": 10,
+    })
+
+    #Ensure the order response is created
+    assert response.status_code == 201
+    assert response.json["status"] == "pending"
+    assert response.json["product_id"] == product_response.get_json()["id"]
+    assert response.json["supplier_id"] == supplier_response.get_json()["id"]
+
+
+def test_list_product_order(client):
+    product_dummy = {
+        "name": "Dummy",
+        "sku": "DUM-001",
+        "unit_price": 10.00,
+        "quantity_on_hand": 5,
+    }
+    product_response = client.post("/products", json=product_dummy)
+
+    #Ensure the product is created
+    assert product_response.status_code == 201
+
+    supplier_dummy = {
+        "name": "Dummy",
+        "contact_email": "dum@dum.ca",
+    }
+    supplier_response = client.post("/suppliers", json=supplier_dummy)
+
+    #Ensure the supplier is created
+    assert supplier_response.status_code == 201
+
+    order_response = client.post("/purchase-orders", json={
+        "product_id": product_response.get_json()["id"],
+        "supplier_id": supplier_response.get_json()["id"],
+        "quantity_ordered": 10,
+    })
+
+    #Ensure the product response is created
+    assert order_response.status_code == 201
+
+
+    response = client.get("/purchase-orders")
+    #Ensure the list exists
+    assert response.status_code == 200
+
+
+def test_supplier_false_order(client):
+    product_dummy = {
+        "name": "Dummy",
+        "sku": "DUM-001",
+        "unit_price": 10.00,
+        "quantity_on_hand": 5,
+    }
+    product_response = client.post("/products", json=product_dummy)
+
+    #Ensure the product is created
+    assert product_response.status_code == 201
+
+    response = client.post("/purchase-orders", json={
+        "product_id": product_response.get_json()["id"],
+        "supplier_id": 9999,
+        "quantity_ordered": 10,
+    })
+
+    #Ensure the order does not exist (due to supplier)
+    assert response.status_code == 404
+    assert response.json["error"] == "Supplier not found"
+
+
+def test_product_false_order(client):
+    supplier_dummy = {
+        "name": "Dummy",
+        "contact_email": "dum@dum.ca",
+    }
+    supplier_response = client.post("/suppliers", json=supplier_dummy)
+
+    #Ensure the supplier is created
+    assert supplier_response.status_code == 201
+
+    response = client.post("/purchase-orders", json={
+        "product_id": 9999,
+        "supplier_id": supplier_response.get_json()["id"],
+        "quantity_ordered": 10,
+    })
+
+    #Ensure the order does not exist (due to product)
+    assert response.status_code == 404
+    assert response.json["error"] == "Product not found"
+
+
+def test_purchase_false(client):
+    response = client.get("/purchase-orders/9999")
+
+    #Ensure does not exist
+    assert response.status_code == 404
+    assert response.json["error"] == "Purchase order not found"
+
+def test_purchase_receive(client):
+    product_dummy = {
+        "name": "Dummy",
+        "sku": "DUM-001",
+        "unit_price": 10.00,
+        "quantity_on_hand": 5,
+    }
+    product_response = client.post("/products", json=product_dummy)
+
+    #Ensure the product is created
+    assert product_response.status_code == 201
+
+    supplier_dummy = {
+        "name": "Dummy",
+        "contact_email": "dum@dum.ca",
+    }
+    supplier_response = client.post("/suppliers", json=supplier_dummy)
+
+    #Ensure the supplier is created
+    assert supplier_response.status_code == 201
+
+    order_response = client.post("/purchase-orders", json={
+        "product_id": product_response.get_json()["id"],
+        "supplier_id": supplier_response.get_json()["id"],
+        "quantity_ordered": 10,
+    })
+
+    #Ensure the product response is created
+    assert order_response.status_code == 201
+
+    response = client.put(f"/purchase-orders/{order_response.get_json()["id"]}/receive")
+
+    #Ensure receive exists
+    assert response.status_code == 200
+    assert response.json["status"] == "received"
+
+def test_purchase_receive_false(client):
+    response = client.put("/purchase-orders/9999/receive")
+
+    #Ensure it does not exist
+    assert response.status_code == 404
+    assert response.json["error"] == "Purchase order not found"
+
+#Products testing
+def test_create_product(client):
+    product_dummy = {
+        "name": "Dummy",
+        "sku": "DUM-001",
+        "unit_price": 10.00,
+        "quantity_on_hand": 5,
+    }
+    product_response = client.post("/products", json=product_dummy)
+
+    #Ensure the product is created
+    assert product_response.status_code == 201
+
+def test_low_stock(client):
+    low_product_dummy = {
+        "name": "Dummy",
+        "sku": "DUM-001",
+        "unit_price": 10.00,
+        "quantity_on_hand": 2,
+    }
+    product_response = client.post("/products", json=low_product_dummy)
+
+    #Ensure the product is created
+    assert product_response.status_code == 201
+
+    high_product_dummy = {
+        "name": "Dummy",
+        "sku": "DUM-001",
+        "unit_price": 10.00,
+        "quantity_on_hand": 20,
+    }
+    product_response = client.post("/products", json=high_product_dummy)
+
+    #Ensure the product is created
+    assert product_response.status_code == 201
+
+    response = client.get("/products/low-stock")
+
+    #Ensure low stock exists
+    assert response.status_code == 200
+
+def test_get_product(client):
+    product_dummy = {
+        "name": "Dummy",
+        "sku": "DUM-001",
+        "unit_price": 10.00,
+        "quantity_on_hand": 5,
+    }
+    product_response = client.post("/products", json=product_dummy)
+
+    #Ensure the product is created
+    assert product_response.status_code == 201
+
+    response = client.get(f"/products/{product_response.get_json()["id"]}")    
+
+    #Ensure it exists
+    assert response.status_code == 200
+    assert response.json["id"] == product_response.get_json()["id"]
+    assert response.json["name"] == "Dummy"
+
+def test_product_false(client):
+    response = client.get("/products/9999")
+
+    #Ensure does not exist
+    assert response.status_code == 404
+    assert response.json["error"] == "Product not found"
+
+
+def test_stock_level(client):
+    product_dummy = {
+        "name": "Dummy",
+        "sku": "DUM-001",
+        "unit_price": 10.00,
+        "quantity_on_hand": 5,
+    }
+    product_response = client.post("/products", json=product_dummy)
+   
+    #Ensure the product is created
+    assert product_response.status_code == 201
+
+    response = client.get(f"/products/{product_response.get_json()["id"]}/stock-level")
+
+    #Ensure its created
+    assert response.status_code == 200
+    assert response.json["product_id"] == product_response.get_json()["id"]
+    assert response.json["quantity_on_hand"] == 5
+
+def test_stock_level_false(client):
+    response = client.get("/products/9999/stock-level")
+
+    #Ensure fails
+    assert response.status_code == 404
+    assert response.json["error"] == "Product not found"
+
+
+#Views testing
+def test_home(client):
+    response = client.get("/")
+
+    #Ensure it exists
+    assert response.status_code == 200
+
+def test_products_page_get(client):
+    response = client.get("/ui/products")
+
+    #Ensure it exists
+    assert response.status_code == 200
+
+def test_products_post(client):
+    product_dummy = {
+        "name": "Dummy",
+        "sku": "DUM-001",
+        "unit_price": 10.00,
+        "quantity_on_hand": 5,
+    }
+    product_response = client.post("/products", json=product_dummy)
+    
+    #Ensure the product is created
+    assert product_response.status_code == 201
+
+    response = client.post("/ui/products", data=product_dummy)
+
+    #Ensure redirect
+    assert response.status_code == 302
+    assert response.headers["Location"].endswith("/ui/products")
+
+def test_delete_products_page(client):
+    product_dummy = {
+        "name": "Dummy",
+        "sku": "DUM-001",
+        "unit_price": 10.00,
+        "quantity_on_hand": 5,
+    }
+    product_response = client.post("/products", json=product_dummy)
+    
+    #Ensure the product is created
+    assert product_response.status_code == 201
+
+    response = client.post(f"/ui/products/{product_response.get_json()["id"]}/delete")
+
+    #Ensure redirect
+    assert response.status_code == 302
+
+def test_delete_products_page_false(client):
+    response = client.post("/ui/products/9999/delete")
+    
+    #Ensure redirect
+    assert response.status_code == 302
+    assert response.headers["Location"].endswith("/ui/products")
