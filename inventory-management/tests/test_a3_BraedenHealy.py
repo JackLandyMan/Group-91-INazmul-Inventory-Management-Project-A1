@@ -3,7 +3,6 @@ from app import store
 
 
 #Notification system testing
-
 @patch("app.routes.transactions.send_notification", return_value=True)
 def test_notification_success(mock_send, client):
     """Ensures the transaction completes successfully when the
@@ -163,7 +162,6 @@ def test_create_product(client):
 
     #Ensure its created
     assert response.status_code == 201
-    # return response.json["id"]
 
 def test_create_supplier(client):
     supplier_dummy = {
@@ -174,7 +172,6 @@ def test_create_supplier(client):
 
     #Ensure its created
     assert response.status_code == 201
-    # return response.json["id"]
 
 
 def test_create_purchase_order(client):
@@ -340,19 +337,6 @@ def test_purchase_receive_false(client):
     #Ensure it does not exist
     assert response.status_code == 404
     assert response.json["error"] == "Purchase order not found"
-
-#Products testing
-def test_create_product(client):
-    product_dummy = {
-        "name": "Dummy",
-        "sku": "DUM-001",
-        "unit_price": 10.00,
-        "quantity_on_hand": 5,
-    }
-    product_response = client.post("/products", json=product_dummy)
-
-    #Ensure the product is created
-    assert product_response.status_code == 201
 
 def test_low_stock(client):
     low_product_dummy = {
