@@ -8,6 +8,7 @@ from datetime import date
 #3
 #4
 #5
+#6
 
 #testing the failures of the notification system
 def test_notification_failure(monkeypatch, client):
