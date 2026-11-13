@@ -3,6 +3,8 @@ from app import store
 from app.models.purchase_order import PurchaseOrder
 from datetime import date
 #Assignment 3 tests Scott Woods
+#trying to trigger gitup. 
+#trying to triiger gitup2
 
 #testing the failures of the notification system
 def test_notification_failure(monkeypatch, client):
