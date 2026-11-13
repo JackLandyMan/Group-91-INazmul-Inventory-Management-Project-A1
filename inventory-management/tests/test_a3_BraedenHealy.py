@@ -324,7 +324,9 @@ def test_purchase_receive(client):
     #Ensure the product response is created
     assert order_response.status_code == 201
 
-    response = client.put(f"/purchase-orders/{order_response.get_json()["id"]}/receive")
+    order_id = order_response.get_json()["id"]
+
+    response = client.put(f"/purchase-orders/{order_id}/receive")
 
     #Ensure receive exists
     assert response.status_code == 200
@@ -377,7 +379,8 @@ def test_get_product(client):
     #Ensure the product is created
     assert product_response.status_code == 201
 
-    response = client.get(f"/products/{product_response.get_json()["id"]}")    
+    product_id = product_response.get_json()["id"]
+    response = client.get(f"/products/{product_id}")
 
     #Ensure it exists
     assert response.status_code == 200
@@ -404,7 +407,8 @@ def test_stock_level(client):
     #Ensure the product is created
     assert product_response.status_code == 201
 
-    response = client.get(f"/products/{product_response.get_json()["id"]}/stock-level")
+    product_id = product_response.get_json()["id"]
+    response = client.get(f"/products/{product_id}/stock-level")
 
     #Ensure its created
     assert response.status_code == 200
@@ -462,7 +466,8 @@ def test_delete_products_page(client):
     #Ensure the product is created
     assert product_response.status_code == 201
 
-    response = client.post(f"/ui/products/{product_response.get_json()["id"]}/delete")
+    product_id = product_response.get_json()["id"]
+    response = client.post(f"/ui/products/{product_id}/delete")
 
     #Ensure redirect
     assert response.status_code == 302
@@ -473,3 +478,4 @@ def test_delete_products_page_false(client):
     #Ensure redirect
     assert response.status_code == 302
     assert response.headers["Location"].endswith("/ui/products")
+
