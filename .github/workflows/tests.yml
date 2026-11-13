@@ -2,10 +2,10 @@ name: Run Pytest on Inventory Tests
 on:
   push:
     paths:
-      - 'inventory-management/test/**'
+      - 'inventory-management/tests/**'
   pull_request:
     paths:
-      - 'inventory-management/test/**'
+      - 'inventory-management/tests/**'
 
 jobs:
   pytest:
