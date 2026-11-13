@@ -33,4 +33,5 @@ jobs:
 
       # Run pytest targeting tests
       - name: Run Pytest
+        working-directory: ./inventory-management
         run: python -m pytest -v --cov=app --cov-report=term-missing --cov-fail-under=90
