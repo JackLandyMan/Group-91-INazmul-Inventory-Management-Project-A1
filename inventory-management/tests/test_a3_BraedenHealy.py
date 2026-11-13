@@ -287,7 +287,6 @@ def test_product_false_order(client):
     assert response.status_code == 404
     assert response.json["error"] == "Product not found"
 
-
 def test_purchase_false(client):
     response = client.get("/purchase-orders/9999")
 
